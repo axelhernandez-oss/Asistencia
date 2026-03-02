@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Control de Asistencia - HH Transportes</title>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #444;
+            --success-color: #2e7d32;
+            --error-color: #d32f2f;
+            --warning-color: #ed6c02;
+            --bg-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 22px;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #sede-tag {
+            display: block;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #777;
+            font-weight: bold;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #000;
+            margin-bottom: 20px;
+            transform: scaleX(-1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-entrada {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-entrada:hover {
+            background-color: #1b5e20;
+        }
+
+        .btn-salida {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        .btn-salida:hover {
+            background-color: #b71c1c;
+        }
+
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 14px;
+            min-height: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .status-neutral { color: #555; }
+        .status-success { color: var(--success-color); background-color: #e8f5e9; }
+        .status-error { color: var(--error-color); background-color: #ffebee; }
+        .status-warning { color: var(--warning-color); background-color: #fff3e0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Control de Asistencia</h2>
+        <span id="sede-tag">Validando Ubicación...</span>
+    </div>
+
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <button id="btnE" class="btn btn-entrada" onclick="procesar('ENTRADA')">Registrar Entrada</button>
+    <button id="btnS" class="btn btn-salida" onclick="procesar('SALIDA')">Registrar Salida</button>
+
+    <div id="status" class="status-neutral"></div>
+</div>
+
+<script>
+    const CONFIG_SEDES = {
+        "Manzanillo": { lat: 21.107936, lng: -101.638781 },
+        "Queretaro":     {  lat: 21.107936, lng: -101.638781 },
+        "CDMX": {  lat: 21.107936, lng: -101.638781 },
+        "Veracruz":    {  lat: 21.107936, lng: -101.638781 },
+        "Altamira":    {  lat: 21.107936, lng: -101.638781 }
+    };
+
+    const RADIO_PERMITIDO = 300; 
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby0xPIwIoBHs1SmGcPoXRLe7pLMTWJPHSu3y94mrYFkrNDxi2dEPrdH4Lc0BicJpHaMww/exec"; 
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const idEmpleado = urlParams.get('id');
+    const sedeUrl = urlParams.get('sede');
+
+    document.getElementById('sede-tag').innerText = "Sede: " + (sedeUrl || "No Identificada");
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const statusDiv = document.getElementById('status');
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => { 
+            statusDiv.innerText = "Error: Acceso a cámara denegado.";
+            statusDiv.className = "status-error";
+        });
+
+    function obtenerDistancia(lat1, lon1, lat2, lon2) {
+        const R = 6371000; 
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    async function procesar(tipo) {
+        if (!idEmpleado || !sedeUrl) {
+            statusDiv.innerText = "Error: Parámetros ID/Sede ausentes.";
+            statusDiv.className = "status-error";
+            return;
+        }
+
+        const btnE = document.getElementById('btnE');
+        const btnS = document.getElementById('btnS');
+        btnE.disabled = true; 
+        btnS.disabled = true;
+        statusDiv.innerText = "Validando geolocalización...";
+        statusDiv.className = "status-neutral";
+
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const latUser = pos.coords.latitude;
+            const lngUser = pos.coords.longitude;
+            const centroSede = CONFIG_SEDES[sedeUrl];
+
+            if (centroSede) {
+                const distancia = obtenerDistancia(latUser, lngUser, centroSede.lat, centroSede.lng);
+                if (distancia > RADIO_PERMITIDO) {
+                    statusDiv.innerText = "Error: Fuera de rango permitido.";
+                    statusDiv.className = "status-error";
+                    btnE.disabled = false; btnS.disabled = false;
+                    return;
+                }
+            }
+
+            statusDiv.innerText = "Procesando registro...";
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const fotoBase64 = canvas.toDataURL('image/png');
+
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        id: idEmpleado,
+                        sede: sedeUrl,
+                        tipo: tipo,
+                        lat: latUser,
+                        lng: lngUser,
+                        foto: fotoBase64
+                    })
+                });
+                
+                const resultado = await response.text();
+
+                if (resultado === "OK") {
+                    statusDiv.innerText = "Registro de " + tipo + " completado.";
+                    statusDiv.className = "status-success";
+                    video.style.display = "none";
+                } 
+                else if (resultado === "YA_TIENE_ENTRADA") {
+                    statusDiv.innerText = "Aviso: Entrada ya registrada previamente.";
+                    statusDiv.className = "status-warning";
+                    btnE.disabled = false; btnS.disabled = false;
+                } 
+                else if (resultado === "YA_TIENE_SALIDA") {
+                    statusDiv.innerText = "Aviso: Salida ya registrada previamente.";
+                    statusDiv.className = "status-warning";
+                    btnE.disabled = false; btnS.disabled = false;
+                }
+                else {
+                    statusDiv.innerText = "Respuesta del sistema: " + resultado;
+                    btnE.disabled = false; btnS.disabled = false;
+                }
+
+            } catch (err) {
+                statusDiv.innerText = "Error de comunicación con el servidor.";
+                statusDiv.className = "status-error";
+                btnE.disabled = false; btnS.disabled = false;
+            }
+
+        }, (err) => {
+            statusDiv.innerText = "Error: Se requiere activación de GPS.";
+            statusDiv.className = "status-error";
+            btnE.disabled = false; btnS.disabled = false;
+        }, { enableHighAccuracy: true });
+    }
+</script>
+
+</body>
+</html>
