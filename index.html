@@ -112,6 +112,30 @@
         .status-success { color: var(--success); background: #e8f5e9; }
         .status-error { color: var(--error); background: #ffebee; }
         .status-warning { color: var(--warning); background: #fff3e0; }
+
+        /* Estilos para el Modal de Confirmación */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-box {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 320px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .modal-box h3 { margin-top: 0; color: var(--error); font-size: 18px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-confirm { background: var(--error); color: white; margin-bottom: 0; }
+        .btn-cancel { background: #eee; color: #333; margin-bottom: 0; }
     </style>
 </head>
 <body>
@@ -131,9 +155,20 @@
     <canvas id="canvas" style="display:none;"></canvas>
 
     <button id="btnE" class="btn btn-entrada" onclick="procesar('ENTRADA')">Registrar Entrada</button>
-    <button id="btnS" class="btn btn-salida" onclick="procesar('SALIDA')">Registrar Salida</button>
+    <button id="btnS" class="btn btn-salida" onclick="confirmarSalida()">Registrar Salida</button>
 
     <div id="status" class="status-neutral">Listo para registro</div>
+</div>
+
+<div id="modal-confirm" class="modal-overlay">
+    <div class="modal-box">
+        <h3>¿Confirmar Salida?</h3>
+        <p style="font-size: 14px;">Estás a punto de registrar tu salida. ¿Deseas continuar?</p>
+        <div class="modal-buttons">
+            <button class="btn btn-cancel" onclick="cerrarModal()">No, cancelar</button>
+            <button class="btn btn-confirm" onclick="ejecutarSalida()">Sí, salir</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -152,7 +187,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const idEmpleado = urlParams.get('id');
     const sedeUrl = urlParams.get('sede');
-    const nombreUrl = urlParams.get('nombre'); // Opcional: &nombre=Juan_Perez
+    const nombreUrl = urlParams.get('nombre');
 
     // Mostrar datos en pantalla
     document.getElementById('display-id').innerText = idEmpleado || "No detectado";
@@ -172,6 +207,24 @@
         statusDiv.className = clase;
     }
 
+    // Funciones del Modal
+    function confirmarSalida() {
+        if (!idEmpleado || !sedeUrl) {
+            actualizarStatus("Error: Datos insuficientes en el enlace.", "status-error");
+            return;
+        }
+        document.getElementById('modal-confirm').style.display = 'flex';
+    }
+
+    function cerrarModal() {
+        document.getElementById('modal-confirm').style.display = 'none';
+    }
+
+    function ejecutarSalida() {
+        cerrarModal();
+        procesar('SALIDA');
+    }
+
     function calcularDistancia(lat1, lon1, lat2, lon2) {
         const R = 6371000; 
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -183,11 +236,6 @@
     }
 
     async function procesar(tipo) {
-        if (!idEmpleado || !sedeUrl) {
-            actualizarStatus("Error: Datos insuficientes en el enlace.", "status-error");
-            return;
-        }
-
         const btnE = document.getElementById('btnE');
         const btnS = document.getElementById('btnS');
         btnE.disabled = true; btnS.disabled = true;
