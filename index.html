@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Control de Asistencia - HH Transportes</title>
+    <title>Asistencia Corporativa - HH Transportes</title>
     <style>
         :root {
-            --primary-color: #1a73e8;
-            --secondary-color: #444;
-            --success-color: #2e7d32;
-            --error-color: #d32f2f;
-            --warning-color: #ed6c02;
-            --bg-color: #f8f9fa;
+            --primary: #1a73e8;
+            --secondary: #455a64;
+            --success: #2e7d32;
+            --error: #c62828;
+            --warning: #f57c00;
+            --bg: #f5f7f8;
         }
 
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg);
             margin: 0;
             display: flex;
             justify-content: center;
@@ -26,41 +26,51 @@
         }
 
         .container {
-            background-color: #ffffff;
-            padding: 40px;
+            background: #ffffff;
+            padding: 35px;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             text-align: center;
         }
 
         .header {
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 15px;
         }
 
         h2 {
             margin: 0;
-            font-size: 22px;
-            color: var(--secondary-color);
+            font-size: 18px;
+            color: var(--secondary);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        #id-tag {
-            display: block;
-            margin-top: 10px;
-            font-size: 13px;
-            color: #777;
+        .user-card {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary);
+            text-align: left;
+        }
+
+        .user-card p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .user-data {
             font-weight: bold;
+            color: #222;
         }
 
         video {
             width: 100%;
-            height: auto;
-            border: 1px solid #ddd;
             border-radius: 4px;
             background-color: #000;
             margin-bottom: 20px;
@@ -69,7 +79,7 @@
 
         .btn {
             width: 100%;
-            padding: 14px;
+            padding: 15px;
             margin-bottom: 12px;
             border: none;
             border-radius: 4px;
@@ -77,44 +87,31 @@
             font-weight: bold;
             text-transform: uppercase;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
         }
 
-        .btn-entrada {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        .btn-entrada:hover {
-            background-color: #1b5e20;
-        }
-
-        .btn-salida {
-            background-color: var(--error-color);
-            color: white;
-        }
-
-        .btn-salida:hover {
-            background-color: #b71c1c;
-        }
+        .btn-entrada { background-color: var(--success); color: white; }
+        .btn-salida { background-color: var(--error); color: white; }
 
         button:disabled {
             background-color: #bdc3c7;
             cursor: not-allowed;
+            opacity: 0.8;
         }
 
         #status {
-            margin-top: 20px;
-            font-size: 14px;
-            min-height: 20px;
+            margin-top: 15px;
+            font-size: 13px;
+            min-height: 35px;
             padding: 10px;
             border-radius: 4px;
+            font-weight: 500;
         }
 
-        .status-neutral { color: #555; }
-        .status-success { color: var(--success-color); background-color: #e8f5e9; }
-        .status-error { color: var(--error-color); background-color: #ffebee; }
-        .status-warning { color: var(--warning-color); background-color: #fff3e0; }
+        .status-neutral { color: #555; background: #eceff1; }
+        .status-success { color: var(--success); background: #e8f5e9; }
+        .status-error { color: var(--error); background: #ffebee; }
+        .status-warning { color: var(--warning); background: #fff3e0; }
     </style>
 </head>
 <body>
@@ -122,7 +119,12 @@
 <div class="container">
     <div class="header">
         <h2>Control de Asistencia</h2>
-        <span id="id-tag">Validando Ubicación...</span>
+    </div>
+
+    <div class="user-card">
+        <p>Colaborador: <span id="display-nombre" class="user-data">Cargando...</span></p>
+        <p>ID Empleado: <span id="display-id" class="user-data">---</span></p>
+        <p>Sede Actual: <span id="display-sede" class="user-data">---</span></p>
     </div>
 
     <video id="video" autoplay playsinline></video>
@@ -131,27 +133,31 @@
     <button id="btnE" class="btn btn-entrada" onclick="procesar('ENTRADA')">Registrar Entrada</button>
     <button id="btnS" class="btn btn-salida" onclick="procesar('SALIDA')">Registrar Salida</button>
 
-    <div id="status" class="status-neutral"></div>
+    <div id="status" class="status-neutral">Listo para registro</div>
 </div>
 
 <script>
     const CONFIG_SEDES = {
-        "Manzanillo": { lat: 21.107936, lng: -101.638781 },
-        "Queretaro":     {  lat: 21.107936, lng: -101.638781 },
-        "CDMX": {  lat: 21.107936, lng: -101.638781 },
-        "Veracruz":    {  lat: 21.107936, lng: -101.638781 },
-        "Altamira":    {  lat: 21.107936, lng: -101.638781 }
+        "Manzanillo":  { lat: 19.0522, lng: -104.3159 },
+        "Colima":      { lat: 19.2433, lng: -103.7250 },
+        "Guadalajara": { lat: 20.6595, lng: -103.3494 },
+        "Veracruz":    { lat: 19.1738, lng: -96.1342 },
+        "Monterrey":   { lat: 25.6866, lng: -100.3161 }
     };
 
-    const RADIO_PERMITIDO = 300; 
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby0xPIwIoBHs1SmGcPoXRLe7pLMTWJPHSu3y94mrYFkrNDxi2dEPrdH4Lc0BicJpHaMww/exec"; 
+    const RADIO_PERMITIDO = 800; 
+    const WEB_APP_URL = "TU_URL_DE_GOOGLE_APPS_SCRIPT"; 
 
+    // Obtención de parámetros de URL
     const urlParams = new URLSearchParams(window.location.search);
     const idEmpleado = urlParams.get('id');
     const sedeUrl = urlParams.get('sede');
+    const nombreUrl = urlParams.get('nombre'); // Opcional: &nombre=Juan_Perez
 
-    document.getElementById('id-tag').innerText = "ID: " + (idEmpleado || "No Identificado");
- 
+    // Mostrar datos en pantalla
+    document.getElementById('display-id').innerText = idEmpleado || "No detectado";
+    document.getElementById('display-sede').innerText = sedeUrl || "Sin sede";
+    document.getElementById('display-nombre').innerText = nombreUrl ? nombreUrl.replace(/_/g, ' ') : "Usuario Registrado";
 
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
@@ -159,105 +165,108 @@
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
         .then(stream => { video.srcObject = stream; })
-        .catch(err => { 
-            statusDiv.innerText = "Error: Acceso a cámara denegado.";
-            statusDiv.className = "status-error";
-        });
+        .catch(() => { actualizarStatus("Error: Acceso a cámara denegado.", "status-error"); });
 
-    function obtenerDistancia(lat1, lon1, lat2, lon2) {
+    function actualizarStatus(texto, clase) {
+        statusDiv.innerText = texto;
+        statusDiv.className = clase;
+    }
+
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
         const R = 6371000; 
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
                   Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
                   Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
     async function procesar(tipo) {
         if (!idEmpleado || !sedeUrl) {
-            statusDiv.innerText = "Error: Parámetros ID/Sede ausentes.";
-            statusDiv.className = "status-error";
+            actualizarStatus("Error: Datos insuficientes en el enlace.", "status-error");
             return;
         }
 
         const btnE = document.getElementById('btnE');
         const btnS = document.getElementById('btnS');
-        btnE.disabled = true; 
-        btnS.disabled = true;
-        statusDiv.innerText = "Validando geolocalización...";
-        statusDiv.className = "status-neutral";
+        btnE.disabled = true; btnS.disabled = true;
+
+        actualizarStatus("Validando ubicación...", "status-neutral");
 
         navigator.geolocation.getCurrentPosition(async (pos) => {
-            const latUser = pos.coords.latitude;
-            const lngUser = pos.coords.longitude;
+            const userLat = pos.coords.latitude;
+            const userLng = pos.coords.longitude;
             const centroSede = CONFIG_SEDES[sedeUrl];
 
             if (centroSede) {
-                const distancia = obtenerDistancia(latUser, lngUser, centroSede.lat, centroSede.lng);
+                const distancia = calcularDistancia(userLat, userLng, centroSede.lat, centroSede.lng);
                 if (distancia > RADIO_PERMITIDO) {
-                    statusDiv.innerText = "Error: Fuera de rango permitido.";
-                    statusDiv.className = "status-error";
+                    actualizarStatus("Fuera de rango. Acérquese a la sede.", "status-error");
                     btnE.disabled = false; btnS.disabled = false;
                     return;
                 }
             }
 
-            statusDiv.innerText = "Procesando registro...";
+            actualizarStatus("Procesando imagen...", "status-neutral");
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
-            const fotoBase64 = canvas.toDataURL('image/png');
+            const fotoBase64 = canvas.toDataURL('image/png', 0.7);
 
-            try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        id: idEmpleado,
-                        sede: sedeUrl,
-                        tipo: tipo,
-                        lat: latUser,
-                        lng: lngUser,
-                        foto: fotoBase64
-                    })
-                });
-                
-                const resultado = await response.text();
+            let intentos = 0;
+            let completado = false;
+            const maxIntentos = 3;
 
-                if (resultado === "OK") {
-                    statusDiv.innerText = "Registro de " + tipo + " completado.";
-                    statusDiv.className = "status-success";
-                    video.style.display = "none";
-                } 
-                else if (resultado === "YA_TIENE_ENTRADA") {
-                    statusDiv.innerText = "Aviso: Entrada ya registrada previamente.";
-                    statusDiv.className = "status-warning";
-                    btnE.disabled = false; btnS.disabled = false;
-                } 
-                else if (resultado === "YA_TIENE_SALIDA") {
-                    statusDiv.innerText = "Aviso: Salida ya registrada previamente.";
-                    statusDiv.className = "status-warning";
-                    btnE.disabled = false; btnS.disabled = false;
+            while (intentos < maxIntentos && !completado) {
+                intentos++;
+                actualizarStatus(intentos > 1 ? `Reintentando (${intentos}/${maxIntentos})...` : "Enviando registro...", "status-neutral");
+
+                try {
+                    const response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            id: idEmpleado,
+                            sede: sedeUrl,
+                            tipo: tipo,
+                            lat: userLat,
+                            lng: userLng,
+                            foto: fotoBase64
+                        })
+                    });
+
+                    const resTexto = await response.text();
+
+                    if (resTexto === "OK") {
+                        actualizarStatus(`¡${tipo} registrada correctamente!`, "status-success");
+                        video.style.display = "none";
+                        completado = true;
+                    } 
+                    else if (resTexto.includes("SERVIDOR OCUPADO")) {
+                        if (intentos < maxIntentos) await new Promise(r => setTimeout(r, 4000));
+                        else actualizarStatus("Saturación de red. Reintente en 1 min.", "status-warning");
+                    }
+                    else if (resTexto.includes("YA_TIENE")) {
+                        actualizarStatus("Ya existe un registro previo el día de hoy.", "status-warning");
+                        completado = true;
+                    }
+                    else {
+                        actualizarStatus("Error: " + resTexto, "status-error");
+                        completado = true;
+                    }
+                } catch (e) {
+                    if (intentos < maxIntentos) await new Promise(r => setTimeout(r, 4000));
+                    else {
+                        actualizarStatus("Error de conexión.", "status-error");
+                        btnE.disabled = false; btnS.disabled = false;
+                    }
                 }
-                else {
-                    statusDiv.innerText = "Respuesta del sistema: " + resultado;
-                    btnE.disabled = false; btnS.disabled = false;
-                }
-
-            } catch (err) {
-                statusDiv.innerText = "Error de comunicación con el servidor.";
-                statusDiv.className = "status-error";
-                btnE.disabled = false; btnS.disabled = false;
             }
-
-        }, (err) => {
-            statusDiv.innerText = "Error: Se requiere activación de GPS.";
-            statusDiv.className = "status-error";
+        }, () => {
+            actualizarStatus("Active su GPS para registrar asistencia.", "status-error");
             btnE.disabled = false; btnS.disabled = false;
         }, { enableHighAccuracy: true });
     }
 </script>
-
 </body>
 </html>
