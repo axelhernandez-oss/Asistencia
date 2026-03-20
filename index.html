@@ -3,319 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistencia Corporativa - HH Transportes</title>
+    <title>Registro de Asistencia | HH Transportes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary: #1a73e8;
-            --secondary: #455a64;
-            --success: #2e7d32;
-            --error: #c62828;
-            --warning: #f57c00;
-            --bg: #f5f7f8;
-        }
-
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .container {
-            background: #ffffff;
-            padding: 35px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 420px;
-            text-align: center;
-        }
-
-        .header {
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 15px;
-        }
-
-        h2 {
-            margin: 0;
-            font-size: 18px;
-            color: var(--secondary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .user-card {
-            background: #f8f9fa;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--primary);
-            text-align: left;
-        }
-
-        .user-card p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #555;
-        }
-
-        .user-data {
-            font-weight: bold;
-            color: #222;
-        }
-
-        video {
-            width: 100%;
-            border-radius: 4px;
-            background-color: #000;
-            margin-bottom: 20px;
-            transform: scaleX(-1);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 12px;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-entrada { background-color: var(--success); color: white; }
-        .btn-salida { background-color: var(--error); color: white; }
-
-        button:disabled {
-            background-color: #bdc3c7;
-            cursor: not-allowed;
-            opacity: 0.8;
-        }
-
-        #status {
-            margin-top: 15px;
-            font-size: 13px;
-            min-height: 35px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: 500;
-        }
-
-        .status-neutral { color: #555; background: #eceff1; }
-        .status-success { color: var(--success); background: #e8f5e9; }
-        .status-error { color: var(--error); background: #ffebee; }
-        .status-warning { color: var(--warning); background: #fff3e0; }
-
-        /* Estilos para el Modal de Confirmación */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-box {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 320px;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
-        .modal-box h3 { margin-top: 0; color: var(--error); font-size: 18px; }
-        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-confirm { background: var(--error); color: white; margin-bottom: 0; }
-        .btn-cancel { background: #eee; color: #333; margin-bottom: 0; }
+        body { background-color: #f4f7f6; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .card { border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        #video { width: 100%; border-radius: 10px; background: #000; }
+        .btn-checkin { background-color: #1a73e8; color: white; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h2>Control de Asistencia</h2>
-    </div>
-
-    <div class="user-card">
-        <p>Colaborador: <span id="display-nombre" class="user-data">Cargando...</span></p>
-        <p>ID Empleado: <span id="display-id" class="user-data">---</span></p>
-        <p>Sede Actual: <span id="display-sede" class="user-data">---</span></p>
+<div class="card p-4">
+    <div class="text-center mb-3">
+        <h4 id="displayNombre">Cargando...</h4>
+        <p class="text-muted small">ID: <span id="displayID">---</span> | Sede: <span id="displaySede">---</span></p>
     </div>
 
     <video id="video" autoplay playsinline></video>
     <canvas id="canvas" style="display:none;"></canvas>
 
-    <button id="btnE" class="btn btn-entrada" onclick="procesar('ENTRADA')">Registrar Entrada</button>
-    <button id="btnS" class="btn btn-salida" onclick="confirmarSalida()">Registrar Salida</button>
-
-    <div id="status" class="status-neutral">Listo para registro</div>
-</div>
-
-<div id="modal-confirm" class="modal-overlay">
-    <div class="modal-box">
-        <h3>¿Confirmar Salida?</h3>
-        <p style="font-size: 14px;">Estás a punto de registrar tu salida. ¿Deseas continuar?</p>
-        <div class="modal-buttons">
-            <button class="btn btn-cancel" onclick="cerrarModal()">No, cancelar</button>
-            <button class="btn btn-confirm" onclick="ejecutarSalida()">Sí, salir</button>
-        </div>
+    <div class="mt-3 d-grid gap-2">
+        <button id="btnEntrada" class="btn btn-checkin btn-lg">REGISTRAR ENTRADA</button>
+        <button id="btnSalida" class="btn btn-outline-danger">REGISTRAR SALIDA</button>
     </div>
+    <div id="status" class="mt-2 text-center small"></div>
 </div>
 
 <script>
-    const CONFIG_SEDES = {
-        "Manzanillo":  { lat: 21.1077042, lng:-101.6385025},
-        "Veracruz":      { lat:19.2286856, lng: -96.1948334 },
-        "Altamira": { lat: 22.4674359, lng: -97.9317297 },
-        "Queretaro":    { lat: 20.8299862, lng: -100.4510710 },
-        "CDMX":   { lat: 19.4335791, lng:-99.0898358 },
-        "Pruebas": { lat: 21.1077042, lng:-101.6385025 }
+    document.oncontextmenu = () => false;
+    document.onkeydown = e => {
+        if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && e.keyCode == 85)) return false;
     };
-
-    const RADIO_PERMITIDO = 150; 
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby0xPIwIoBHs1SmGcPoXRLe7pLMTWJPHSu3y94mrYFkrNDxi2dEPrdH4Lc0BicJpHaMww/exec"; 
-
-    // Obtención de parámetros de URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const idEmpleado = urlParams.get('id');
-    const sedeUrl = urlParams.get('sede');
-    const nombreUrl = urlParams.get('nombre');
-
-    // Mostrar datos en pantalla
-    document.getElementById('display-id').innerText = idEmpleado || "No detectado";
-    document.getElementById('display-sede').innerText = sedeUrl || "Sin sede";
-    document.getElementById('display-nombre').innerText = nombreUrl ? nombreUrl.replace(/_/g, ' ') : "Usuario Registrado";
-
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const statusDiv = document.getElementById('status');
-
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-        .then(stream => { video.srcObject = stream; })
-        .catch(() => { actualizarStatus("Error: Acceso a cámara denegado.", "status-error"); });
-
-    function actualizarStatus(texto, clase) {
-        statusDiv.innerText = texto;
-        statusDiv.className = clase;
-    }
-
-    // Funciones del Modal
-    function confirmarSalida() {
-        if (!idEmpleado || !sedeUrl) {
-            actualizarStatus("Error: Datos insuficientes en el enlace.", "status-error");
-            return;
-        }
-        document.getElementById('modal-confirm').style.display = 'flex';
-    }
-
-    function cerrarModal() {
-        document.getElementById('modal-confirm').style.display = 'none';
-    }
-
-    function ejecutarSalida() {
-        cerrarModal();
-        procesar('SALIDA');
-    }
-
-    function calcularDistancia(lat1, lon1, lat2, lon2) {
-        const R = 6371000; 
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-
-    async function procesar(tipo) {
-        const btnE = document.getElementById('btnE');
-        const btnS = document.getElementById('btnS');
-        btnE.disabled = true; btnS.disabled = true;
-
-        actualizarStatus("Validando ubicación...", "status-neutral");
-
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-            const userLat = pos.coords.latitude;
-            const userLng = pos.coords.longitude;
-            const centroSede = CONFIG_SEDES[sedeUrl];
-
-            if (centroSede) {
-                const distancia = calcularDistancia(userLat, userLng, centroSede.lat, centroSede.lng);
-                if (distancia > RADIO_PERMITIDO) {
-                    actualizarStatus("Fuera de rango. Acérquese a la sede.", "status-error");
-                    btnE.disabled = false; btnS.disabled = false;
-                    return;
-                }
-            }
-
-            actualizarStatus("Procesando imagen...", "status-neutral");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            const fotoBase64 = canvas.toDataURL('image/png', 0.7);
-
-            let intentos = 0;
-            let completado = false;
-            const maxIntentos = 3;
-
-            while (intentos < maxIntentos && !completado) {
-                intentos++;
-                actualizarStatus(intentos > 1 ? `Reintentando (${intentos}/${maxIntentos})...` : "Enviando registro...", "status-neutral");
-
-                try {
-                    const response = await fetch(WEB_APP_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            id: idEmpleado,
-                            sede: sedeUrl,
-                            tipo: tipo,
-                            lat: userLat,
-                            lng: userLng,
-                            foto: fotoBase64
-                        })
-                    });
-
-                    const resTexto = await response.text();
-
-                    if (resTexto === "OK") {
-                        actualizarStatus(`¡${tipo} registrada correctamente!`, "status-success");
-                        video.style.display = "none";
-                        completado = true;
-                    } 
-                    else if (resTexto.includes("SERVIDOR OCUPADO")) {
-                        if (intentos < maxIntentos) await new Promise(r => setTimeout(r, 4000));
-                        else actualizarStatus("Saturación de red. Reintente en 1 min.", "status-warning");
-                    }
-                    else if (resTexto.includes("YA_TIENE")) {
-                        actualizarStatus("Ya existe un registro previo el día de hoy.", "status-warning");
-                        completado = true;
-                    }
-                    else {
-                        actualizarStatus("Error: " + resTexto, "status-error");
-                        completado = true;
-                    }
-                } catch (e) {
-                    if (intentos < maxIntentos) await new Promise(r => setTimeout(r, 4000));
-                    else {
-                        actualizarStatus("Error de conexión.", "status-error");
-                        btnE.disabled = false; btnS.disabled = false;
-                    }
-                }
-            }
-        }, () => {
-            actualizarStatus("Active su GPS para registrar asistencia.", "status-error");
-            btnE.disabled = false; btnS.disabled = false;
-        }, { enableHighAccuracy: true });
-    }
 </script>
+
+<script src="js/security_module.js"></script>
 </body>
 </html>
