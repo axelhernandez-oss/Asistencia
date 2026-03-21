@@ -1,42 +1,68 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Asistencia | HH Transportes</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #f4f7f6; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .card { border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        #video { width: 100%; border-radius: 10px; background: #000; }
-        .btn-checkin { background-color: #1a73e8; color: white; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HH Transportes | Registro de Asistencia</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { background-color: #e9ecef; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+    .card-registro { width: 100%; max-width: 400px; border: none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); background: #fff; overflow: hidden; }
+    .header-blue { background: #1a73e8; color: #fff; padding: 20px; text-align: center; }
+    #video { width: 100%; height: 300px; object-fit: cover; background: #000; }
+    .btn-registro { padding: 15px; font-weight: 700; border-radius: 12px; transition: all 0.3s; }
+    .btn-entrada { background-color: #1a73e8; color: white; border: none; }
+    .btn-entrada:hover { background-color: #1557b0; }
+    .info-user { padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; }
+    #status { font-weight: 600; min-height: 24px; }
+    canvas { display: none; }
+  </style>
 </head>
 <body>
 
-<div class="card p-4">
-    <div class="text-center mb-3">
-        <h4 id="displayNombre">Cargando...</h4>
-        <p class="text-muted small">ID: <span id="displayID">---</span> | Sede: <span id="displaySede">---</span></p>
-    </div>
+<div class="card-registro">
+  <div class="header-blue">
+    <h5 class="mb-0"><i class="fas fa-truck-moving me-2"></i>HH TRANSPORTES</h5>
+    <small class="opacity-75">Control de Asistencia v3.0</small>
+  </div>
 
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas" style="display:none;"></canvas>
-
-    <div class="mt-3 d-grid gap-2">
-        <button id="btnEntrada" class="btn btn-checkin btn-lg">REGISTRAR ENTRADA</button>
-        <button id="btnSalida" class="btn btn-outline-danger">REGISTRAR SALIDA</button>
+  <div class="info-user text-center">
+    <h5 id="displayNombre" class="mb-1 text-primary">Cargando...</h5>
+    <div class="d-flex justify-content-center gap-3 text-muted small">
+      <span><i class="fas fa-id-badge"></i> ID: <b id="displayID">---</b></span>
+      <span><i class="fas fa-map-marker-alt"></i> Sede: <b id="displaySede">---</b></span>
     </div>
-    <div id="status" class="mt-2 text-center small"></div>
+  </div>
+
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+
+  <div class="p-4 d-grid gap-3">
+    <button id="btnEntrada" class="btn btn-registro btn-entrada shadow-sm">
+      <i class="fas fa-sign-in-alt me-2"></i> REGISTRAR ENTRADA
+    </button>
+    <button id="btnSalida" class="btn btn-registro btn-outline-danger">
+      <i class="fas fa-sign-out-alt me-2"></i> REGISTRAR SALIDA
+    </button>
+    <div id="status" class="text-center small"></div>
+  </div>
 </div>
 
 <script>
-    document.oncontextmenu = () => false;
-    document.onkeydown = e => {
-        if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && e.keyCode == 85)) return false;
-    };
+  // Evita el clic derecho
+  document.oncontextmenu = () => false;
+  // Evita F12 y combinaciones de teclas de desarrollo
+  document.onkeydown = (e) => {
+    if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && e.keyCode == 85)) {
+      return false;
+    }
+  };
 </script>
 
 <script src="js/security_module.js"></script>
+
 </body>
 </html>
