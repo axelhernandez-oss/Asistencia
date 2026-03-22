@@ -1,107 +1,86 @@
-Sistema de Control de Asistencia Biométrico y Geográfico
-Sistema corporativo de registro de asistencia diseñado para HH Transportes. Utiliza una interfaz web alojada en GitHub Pages para capturar identidad (foto) y ubicación (GPS), procesando los datos mediante Google Apps Script para su almacenamiento en Google Sheets.
+Sistema de Control de Asistencia Biométrico y Geográfico - HH Transportes
+Descripción General
+Sistema corporativo de registro de asistencia diseñado para la gestión de personal de HH Transportes. La solución utiliza una interfaz web alojada en GitHub Pages para la captura de identidad mediante fotografía y validación de coordenadas geográficas en tiempo real. El procesamiento y almacenamiento de datos se realiza de forma segura mediante Google Apps Script y Google Sheets.
 
 Características Principales
-Multi-Sede: Gestión independiente para Manzanillo, Veracruz, Queretaro, CDMX, Altamira
+Gestión Multi-Sede: Soporte independiente para las sedes de Manzanillo, Veracruz, Querétaro, CDMX, Altamira y entornos de Pruebas.
 
-Validación de Geocerca (Geofencing): Bloqueo de registros si el empleado se encuentra fuera del rango permitido (300m - 1km).
+Seguridad por Token: Implementación de una clave de autenticación privada entre el cliente (GitHub) y el servidor (Google) para evitar registros no autorizados.
 
-Seguridad Biométrica: Captura obligatoria de fotografía para entrada y salida.
+Validación de Geocerca (Geofencing): Bloqueo automático de la interfaz y la cámara si el dispositivo se encuentra fuera del radio permitido para cada sede.
 
-Prevención de Duplicados: Sistema inteligente que impide registrar doble entrada o doble salida en el mismo día.
+Confirmación de Usuario: Doble validación mediante cuadros de diálogo para prevenir registros accidentales.
 
-Reportes Automatizados: Estructura optimizada para generar reportes quincenales (Lunes a Sábado).
+Limpieza de Parámetros URL: Una vez cargados los datos del empleado, el sistema limpia la barra de direcciones para proteger la privacidad de la información.
 
-Almacenamiento en Nube: Fotos guardadas automáticamente en carpetas específicas de Google Drive por sede.
+Ofuscación de Código: Lógica del lado del cliente protegida contra ingeniería inversa y acceso no autorizado a credenciales del sistema.
+
+Almacenamiento Dinámico: Organización automática de evidencias fotográficas en Google Drive por Año y Mes.
 
 Tecnologías Utilizadas
-Frontend: HTML5, CSS3 (Diseño Corporativo), JavaScript (Vanilla).
+Frontend: HTML5, CSS3 (Bootstrap 5), JavaScript (Vanilla) con ofuscación de seguridad.
 
-Backend: Google Apps Script (V8 Engine).
+Backend: Google Apps Script (V8 Engine) expuesto como Web App.
 
-Base de Datos: Google Sheets API.
+Seguridad: Encriptación SSL/HTTPS, Validación de Token, Geolocation API.
+
+Base de Datos: Google Sheets.
 
 Almacenamiento: Google Drive API.
 
-Hosting: GitHub Pages.
-
-Requisitos Previos
-Google Spreadsheet: Un archivo con las pestañas de cada sede y sus respectivos históricos.
-
-Google Drive: Carpetas creadas para cada sede para el almacenamiento de imágenes.
-
-URL de Implementación: El script de Google debe estar publicado como "Aplicación Web" con acceso para "Cualquier persona".
-
-Instalación y Configuración
+Requisitos de Configuración
 1. Google Sheets
-Configura tu hoja de cálculo con las siguientes columnas en las pestañas de Historico_[Sede]:
-Fecha | ID | Nombre | Entrada | Salida | Latitud | Longitud | Foto Entrada | Foto Salida
+La hoja de cálculo debe contener pestañas nombradas por sede y sus respectivos históricos con la siguiente estructura de columnas:
+Fecha | ID | Nombre | Entrada | Salida | Latitud | Longitud | Foto Entrada | Foto Salida | Estado | Sede | Clave_Entrada | Clave_Salida
 
-2. Google Apps Script (Código.gs)
-Copia el código del backend en el editor de scripts de tu hoja de cálculo.
+2. Google Apps Script
+Identificación de Carpetas: Actualizar el objeto CARPETAS_SEDES con los IDs reales de Google Drive.
 
-Actualiza el objeto CARPETAS_SEDES con los IDs reales de tus carpetas de Drive.
+Token de Seguridad: Configurar la variable TOKEN_SISTEMA con la misma clave utilizada en el frontend.
 
-Publica como Aplicación Web.
+Publicación: Implementar como "Aplicación Web", ejecutar como "Yo" y acceso para "Cualquier persona".
 
-3. GitHub (index.html)
-Sube el archivo index.html a tu repositorio.
+3. GitHub Pages
+Estructura de Archivos: index.html en la raíz y js/security_module.js (ofuscado).
 
-Configura la constante WEB_APP_URL con la URL proporcionada por Google.
+Geolocalización: Configurar coordenadas exactas y radios de tolerancia en el objeto SEDES_CONFIG.
 
-Ajusta las coordenadas en CONFIG_SEDES para cada ubicación.
+Instrucciones de Uso
+El acceso se realiza mediante una URL parametrizada:
+https://usuario.github.io/Asistencia/index.html?id=ID_EMPLEADO&sede=SEDE&nombre=NOMBRE_CON_GUIONES
 
-Uso del Sistema
-El acceso se realiza mediante una URL parametrizada (generalmente distribuida vía código QR):
+El sistema solicita permisos de Ubicación.
 
-Plaintext
-https://tu-usuario.github.io/asistencia/?id=NUMERO_EMPLEADO&sede=NOMBRE_SEDE
-El empleado abre el enlace desde su dispositivo móvil.
+Si la ubicación es válida, se activan los permisos de Cámara y se muestran los botones de registro.
 
-El sistema valida la ubicación GPS.
+Al seleccionar una acción, el sistema solicita una confirmación final.
 
-El empleado selecciona "Registrar Entrada" o "Registrar Salida".
+Se genera el registro y se notifica el resultado en pantalla.
 
-Se captura la fotografía y se envía el registro al servidor.
+--------------------------------------------------------------------------------------------------------------------------
 
-Seguridad y Privacidad
-HTTPS: Toda la comunicación entre el cliente y el servidor está cifrada vía SSL.
-
-Validación de Servidor: El script verifica la existencia del ID en la base de datos maestra antes de procesar cualquier registro.
-
-Acceso Restringido: El archivo de base de datos no es público; solo el script tiene permisos de lectura/escritura.
-
-Reportes
-Para generar el reporte quincenal, utiliza la pestaña de Reportes con la siguiente lógica de filtro:
-
-Filtro por fechas (Inicio/Fin).
-
-Exclusión de domingos automática.
-
-Consolidación de sedes.
-
-A continuacion se anexa el codigo para appscript 
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Backend: Código de Implementación (Google Apps Script)
+JavaScript
 
     /**
-     * Sistema de Gestión de Asistencia - HH Transportes
-     * Backend: Google Apps Script
+        * Sistema de Gestión de Asistencia - HH Transportes
+        * Backend consolidado con validación de Token y Concurrencia
      */
-
-    function doPost(e) {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-     var zonaHoraria = "GMT-6"; 
-
-      // --- CONFIGURACIÓN DE CARPETAS ---
-      // Reemplazar con los IDs de carpeta de Google Drive para cada sede
-    var CARPETAS_SEDES = {
-      "Sede_A": "ID_CARPETA_1",
-    "Sede_B": "ID_CARPETA_2",
-    "Sede_C": "ID_CARPETA_3"
-        };
-
-    try {
+        
+      function doPost(e) {
+        var lock = LockService.getScriptLock();
+      try {
+    lock.waitLock(60000); // Control de concurrencia
+    
     var data = JSON.parse(e.postData.contents);
+    var zona = "GMT-6";
+    
+    // --- CAPA DE SEGURIDAD ---
+    var TOKEN_SISTEMA = "Cambiar123*"; 
+    if (data.token !== TOKEN_SISTEMA) {
+      return ContentService.createTextOutput("ERROR: ACCESO_NO_AUTORIZADO").setMimeType(ContentService.MimeType.TEXT);
+    }
+
     var idEmpleado = data.id ? data.id.toString().trim() : "";
     var tipoRegistro = (data.tipo || "ENTRADA").toUpperCase();
     var sedeRecibida = data.sede || ""; 
@@ -109,85 +88,101 @@ A continuacion se anexa el codigo para appscript
     var lng = data.lng || "0";
     var base64Foto = data.foto;
 
-    // 1. VALIDACIÓN DE SEDE Y ACCESO A HOJA
-    var hojaSede = ss.getSheetByName(sedeRecibida);
-    if (!hojaSede) return ContentService.createTextOutput("ERROR: SEDE NO ENCONTRADA");
+    // --- CONFIGURACIÓN DE CARPETAS RAÍZ DRIVE ---
+    var CARPETAS_SEDES = {
+      "Manzanillo": "ID_CARPETA_MANZANILLO",
+      "Veracruz":   "ID_CARPETA_VERACRUZ",
+      "CDMX":       "ID_CARPETA_CDMX",
+      "Altamira":    "ID_CARPETA_ALTAMIRA",
+      "Queretaro":   "ID_CARPETA_QUERETARO",
+      "Pruebas":     "ID_CARPETA_PRUEBAS"
+    };
 
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var hojaListaSede = ss.getSheetByName(sedeRecibida);
+    if (!hojaListaSede) return ContentService.createTextOutput("ERROR: SEDE_INEXISTENTE");
+
+    // Validación de Identidad
     var nombreEmpleado = "";
     var existeID = false;
-    var datosSede = hojaSede.getDataRange().getValues();
-    
-    // Búsqueda de ID en la columna C (índice 2)
-    for (var i = 0; i < datosSede.length; i++) {
-      if (datosSede[i][2].toString().trim() === idEmpleado) {
-        nombreEmpleado = datosSede[i][0]; // Columna A
+    var datosLista = hojaListaSede.getDataRange().getValues();
+    for (var i = 0; i < datosLista.length; i++) {
+      if (datosLista[i][2].toString().trim() === idEmpleado) {
+        nombreEmpleado = datosLista[i][0];
         existeID = true;
         break;
       }
     }
+    if (!existeID) return ContentService.createTextOutput("ERROR: ID_NO_AUTORIZADO");
 
-    if (!existeID) return ContentService.createTextOutput("ID_NO_AUTORIZADO");
-
-    // 2. GESTIÓN DE HISTÓRICO POR SEDE
+    // Preparar Hoja de Histórico
     var nombreH = "Historico_" + sedeRecibida;
     var hojaH = ss.getSheetByName(nombreH) || ss.insertSheet(nombreH);
-    
     if (hojaH.getLastRow() === 0) {
-      hojaH.appendRow(["Fecha", "ID", "Nombre", "Entrada", "Salida", "Latitud", "Longitud", "Foto Entrada", "Foto Salida"]);
+      hojaH.appendRow(["Fecha", "ID", "Nombre", "Entrada", "Salida", "Latitud", "Longitud", "Foto Entrada", "Foto Salida", "Estado", "Sede", "Clave_Entrada", "Clave_Salida"]);
     }
 
-    // 3. LÓGICA DE PREVENCIÓN DE DUPLICADOS (Normalización de fecha)
     var ahora = new Date();
-    var hoyTexto = Utilities.formatDate(ahora, zonaHoraria, "yyyy-MM-dd");
-    var horaTexto = Utilities.formatDate(ahora, zonaHoraria, "HH:mm:ss");
+    var hoyTexto = Utilities.formatDate(ahora, zona, "yyyy-MM-dd");
+    var horaTexto = Utilities.formatDate(ahora, zona, "HH:mm:ss");
 
-    var registros = hojaH.getDataRange().getValues();
+    // Prevención de Duplicados vía Claves Únicas
+    var claveEntrada = idEmpleado + "-" + hoyTexto + "-ENTRADA";
+    var claveSalida = idEmpleado + "-" + hoyTexto + "-SALIDA";
+    var registrosH = hojaH.getDataRange().getValues();
+    
+    for (var k = 0; k < registrosH.length; k++) {
+      if (tipoRegistro === "ENTRADA" && registrosH[k][11] === claveEntrada) return ContentService.createTextOutput("YA_EXISTE_ENTRADA");
+      if (tipoRegistro === "SALIDA" && registrosH[k][12] === claveSalida) return ContentService.createTextOutput("YA_EXISTE_SALIDA");
+    }
+
+    // Lógica de Carpeta Dinámica (Año/Mes)
+    var carpetaPadre = DriveApp.getFolderById(CARPETAS_SEDES[sedeRecibida]);
+    var anio = ahora.getFullYear().toString();
+    var mes = ["01_Enero", "02_Febrero", "03_Marzo", "04_Abril", "05_Mayo", "06_Junio", "07_Julio", "08_Agosto", "09_Septiembre", "10_Octubre", "11_Noviembre", "12_Diciembre"][ahora.getMonth()];
+    
+    var fAnio = carpetaPadre.getFoldersByName(anio).hasNext() ? carpetaPadre.getFoldersByName(anio).next() : carpetaPadre.createFolder(anio);
+    var fMes = fAnio.getFoldersByName(mes).hasNext() ? fAnio.getFoldersByName(mes).next() : fAnio.createFolder(mes);
+
+    // Guardar Fotografía
+    var blob = Utilities.newBlob(Utilities.base64Decode(base64Foto.split(',')[1]), "image/png", idEmpleado + "_" + tipoRegistro + "_" + hoyTexto + ".png");
+    var urlFoto = fMes.createFile(blob).getUrl();
+
+    // Registro Consolidado (Entrada y Salida en la misma fila)
     var filaDestino = -1;
-    var yaTieneEntrada = false;
-    var yaTieneSalida = false;
-
-    for (var j = 1; j < registros.length; j++) {
-      if (registros[j][0] != "") {
-        var fechaFila = Utilities.formatDate(new Date(registros[j][0]), zonaHoraria, "yyyy-MM-dd");
-        if (registros[j][1].toString().trim() === idEmpleado && fechaFila === hoyTexto) {
-          filaDestino = j + 1;
-          if (registros[j][3] && registros[j][3].toString().length > 2) yaTieneEntrada = true;
-          if (registros[j][4] && registros[j][4].toString().length > 2) yaTieneSalida = true;
-          break;
-        }
+    for (var j = 1; j < registrosH.length; j++) {
+      var fechaFila = Utilities.formatDate(new Date(registrosH[j][0]), zona, "yyyy-MM-dd");
+      if (registrosH[j][1].toString().trim() === idEmpleado && fechaFila === hoyTexto) {
+        filaDestino = j + 1;
+        break;
       }
     }
 
-    if (tipoRegistro === "ENTRADA" && yaTieneEntrada) return ContentService.createTextOutput("YA_TIENE_ENTRADA");
-    if (tipoRegistro === "SALIDA" && yaTieneSalida) return ContentService.createTextOutput("YA_TIENE_SALIDA");
-
-    // 4. ALMACENAMIENTO DE IMAGEN EN DRIVE
-    var carpetaId = CARPETAS_SEDES[sedeRecibida];
-    var blob = Utilities.newBlob(Utilities.base64Decode(base64Foto.split(',')[1]), "image/png", idEmpleado + "_" + tipoRegistro + "_" + hoyTexto + ".png");
-    var urlFoto = DriveApp.getFolderById(carpetaId).createFile(blob).getUrl();
-
-    // 5. REGISTRO DE DATOS EN LA FILA CORRESPONDIENTE
     if (tipoRegistro === "ENTRADA") {
+      var estado = (ahora.getHours() > 8 || (ahora.getHours() === 8 && ahora.getMinutes() > 15)) ? "RETARDO" : "PUNTUAL";
       if (filaDestino === -1) {
-        hojaH.appendRow([ahora, idEmpleado, nombreEmpleado, horaTexto, "", lat, lng, urlFoto, ""]);
+        hojaH.appendRow([ahora, idEmpleado, nombreEmpleado, horaTexto, "", lat, lng, urlFoto, "", estado, sedeRecibida, claveEntrada, ""]);
       } else {
         hojaH.getRange(filaDestino, 4).setValue(horaTexto);
         hojaH.getRange(filaDestino, 8).setValue(urlFoto);
+        hojaH.getRange(filaDestino, 10).setValue(estado);
+        hojaH.getRange(filaDestino, 12).setValue(claveEntrada);
       }
     } else {
       if (filaDestino !== -1) {
         hojaH.getRange(filaDestino, 5).setValue(horaTexto);
-        hojaH.getRange(filaDestino, 9).setValue(urlFoto); 
+        hojaH.getRange(filaDestino, 9).setValue(urlFoto);
+        hojaH.getRange(filaDestino, 13).setValue(claveSalida);
       } else {
-        hojaH.appendRow([ahora, idEmpleado, nombreEmpleado, "", horaTexto, lat, lng, "", urlFoto]);
+        hojaH.appendRow([ahora, idEmpleado, nombreEmpleado, "", horaTexto, lat, lng, "", urlFoto, "", sedeRecibida, "", claveSalida]);
       }
     }
 
     return ContentService.createTextOutput("OK");
 
-    } catch (err) {
-    return ContentService.createTextOutput("ERROR: " + err.toString());
-  }
-}
-
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      } catch (err) {
+    return ContentService.createTextOutput("ERROR_SERVIDOR");
+      } finally {
+    lock.releaseLock();
+      }    
+    }
