@@ -12,7 +12,7 @@ const SEDES_CONFIG = {
   "CDMX":       { lat: 19.432608, lng: -99.133209, radio: 400 },
   "Altamira":    { lat: 22.395833, lng: -97.932778, radio: 300 },
   "Queretaro":   { lat: 20.588056, lng: -100.388056, radio: 300 },
-  "Pruebas":     { lat: 21.1077042, lng: -101.6385025, radio: 1000 }
+  "Pruebas":     { lat: 21.1077042, lng: -101.6385025, radio: 4000 }
 };
 
 // 1. LÓGICA DE PERSISTENCIA (Soporte para F5 / Recarga)
